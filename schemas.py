@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from typing import Optional
 
 class UserCreate(BaseModel):
@@ -6,6 +6,13 @@ class UserCreate(BaseModel):
     password: str
     confirm_password: str
     email: str
+
+    @classmethod
+    @model_validator(mode='before')
+    def check_it_benefits(cls, data: dict):
+        if data['password'] != data['confirm_password']:
+            raise ValueError('Поля регистрации заполнены неверно!')
+        return data
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
