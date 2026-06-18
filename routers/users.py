@@ -6,6 +6,7 @@ from passlib.hash import bcrypt
 from models import User
 from sqlalchemy import select
 from jwt_token import create_access_token
+from dependencies import get_current_user
 
 router = APIRouter(
     prefix='/user',
@@ -13,11 +14,11 @@ router = APIRouter(
 )
 
 @router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: int):
+async def delete_user(user_id: int, User = Depends(get_current_user)):
     pass
 
 @router.patch('/{user_id}')
-async def update_user(user_id: int, user: UserUpdate):
+async def update_user(user_id: int, user: UserUpdate, User = Depends(get_current_user)):
     return user
 
 @router.post('/register', status_code=status.HTTP_201_CREATED)
