@@ -1,4 +1,10 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends, HTTPException
+from parser import ProductParser
+from dependencies import get_db, get_current_user
+from sqlalchemy.ext.asyncio import AsyncSession
+from models import Product, UserProduct
+from schemas import ProductCreate
+from sqlalchemy import select
 
 router = APIRouter(
     prefix='/products',
@@ -13,9 +19,23 @@ async def get_all_products():
 async def get_product(product_id: int):
     return {'product_id': product_id}
 
-@router.post('/{product_id}')
-async def add_product(product_id: int):
-    return {'product_id': product_id}
+@router.post('/')
+async def add_product(product: ProductCreate, db: AsyncSession = Depends(get_db), user: AsyncSession = Depends(get_current_user)):
+    article_id, title, url, price = await ProductParser(product)
+    existing_product = await db.execute(select(Product).where(Product.article_number == article_id))
+    db_product = existing_product.scalar_one_or_none()
+    if not db_product:
+        db_product = Product(article_number=article_id, title=title, url=url, current_price=price)
+        db.add(db_product)
+        await db.commit()
+        await db.refresh(db_product)
+    existing_link = await db.execute(select(UserProduct).where(UserProduct.user_id == user.id, UserProduct.product_id == db_product.id))
+    if existing_link.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Товар уже отслеживается")
+    user_to_product = UserProduct(user_id=user.id, product_id=db_product.id)
+    db.add(user_to_product)
+    await db.commit()
+    return {'message': 'Товар успешно добавлен'}
 
 @router.delete('/{product_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(product_id: int):
