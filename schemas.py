@@ -30,3 +30,15 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+class ProductCreate(BaseModel):
+    url: str
+
+class ProductResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    article_number: int
+    title: str
+    url: str
+    current_price: int
