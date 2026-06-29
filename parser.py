@@ -40,9 +40,8 @@ CARD_ENDPOINTS = [
     "https://card.wb.ru/cards/v2/detail?appType=1&curr=rub&dest=-1&spp=30&nm={}",
 ]
 
-async def ProductParser(product: ProductCreate):
-    product_url = product.url
-    parsed_url = urlparse(product_url)
+async def ProductParser(url: str):
+    parsed_url = urlparse(url)
     article_id = int(parsed_url.path.split("/")[2])
     vol = article_id // 100000
     host = get_basket_host(vol)
@@ -77,4 +76,4 @@ async def ProductParser(product: ProductCreate):
             title = data["imt_name"]
             price_data = price_response.json()
             price = price_data[-1]["price"]["RUB"]
-    return article_id, title, product_url, price
+    return article_id, title, url, price
