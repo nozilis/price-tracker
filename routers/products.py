@@ -21,7 +21,7 @@ async def get_all_products(db: AsyncSession = Depends(get_db), user: AsyncSessio
 
 @router.post('/')
 async def add_product(product: ProductCreate, db: AsyncSession = Depends(get_db), user: AsyncSession = Depends(get_current_user)):
-    article_id, title, url, price = await ProductParser(product)
+    article_id, title, url, price = await ProductParser(product.url)
     existing_product = await db.execute(select(Product).where(Product.article_number == article_id))
     db_product = existing_product.scalar_one_or_none()
     if not db_product:
