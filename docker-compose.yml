@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+ web:
+   build: .
+   env_file: 
+   - ./.env
+   command: uvicorn main:app --host 0.0.0.0 --port 8000
+   volumes:
+     - .:/code
+   ports:
+     - "8000:8000"
+   depends_on:
+     - db
+     - redis
+ db:
+   image: postgres:16
+   volumes:
+     - postgres_data:/var/lib/postgresql/data/
+   env_file: 
+   - ./.env
+ redis:
+    image: redis:latest
+    container_name: price_tracker_redis
+    ports:
+     - "6379:6379"
+ celery_worker:
+    build: .
+    env_file: 
+     - ./.env
+    container_name: price_tracker_celery_worker
+    command: celery -A celery worker -l info
+    depends_on:
+      - db
+      - redis
+ celery_beat:
+    build: .
+    env_file: 
+     - ./.env
+    container_name: price_tracker_celery_beat
+    command: celery -A celery beat -l info
+    depends_on:
+      - db
+      - redis
+volumes:
+ postgres_data:
